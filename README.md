@@ -1,15 +1,15 @@
 # Image-Processing-Image-App-Klp11
 
-#Anggota Kelompok
+# Anggota Kelompok
 
-*Birrul Walidain
-*Putri Maulida
-*Syifa 'Azhima
+* Birrul Walidain
+* Putri Maulida
+* Syifa 'Azhima
 
-#Requirement
-*PyQt
-*OpenCV
-*Matplotlib
+# Requirement
+* PyQt
+* OpenCV
+* Matplotlib
 
 # Histogram Equalization
 
