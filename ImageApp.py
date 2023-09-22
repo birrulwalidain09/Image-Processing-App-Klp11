@@ -85,6 +85,12 @@ class HistogramEqualizationApp(QMainWindow):
         self.face_blurring_layout.addWidget(self.btn_blur_face)
         self.btn_blur_face.clicked.connect(self.performFaceBlurring)  # Connect the button to performFaceBlurring
         self.btn_blur_face.hide()
+        
+        self.btn_home_face = QPushButton('Home', self)
+        self.face_blurring_layout.addWidget(self.btn_home_face)
+        self.btn_home_face.clicked.connect(self.goToHomePage)
+        self.btn_home_face.setFixedWidth(self.btn_home_face.fontMetrics().boundingRect(self.btn_home_face.text()).width() + 20)
+        self.btn_home_face.hide()
 
         self.btn_home = QPushButton('Home', self)
         self.image_layout.addWidget(self.btn_home)
@@ -144,12 +150,39 @@ class HistogramEqualizationApp(QMainWindow):
         self.btn_face_blurring.clicked.connect(self.showFaceBlurringPage)
         self.btn_face_blurring.setFixedWidth(self.btn_face_blurring.fontMetrics().boundingRect(self.btn_face_blurring.text()).width() + 20)
 
+    def goToHomePage(self):
+        self.stacked_widget.setCurrentWidget(self.home_page)
+        self.btn_upload.hide()
+        self.btn_blur_face.hide()
+        self.scale_slider.hide()
+        self.scale_label.hide()
+        self.btn_home_face.hide()
+        
     def showFaceBlurringPage(self):
         self.stacked_widget.setCurrentWidget(self.face_blurring_page)
-        self.btn_upload.show()
+        self.btn_upload_face.clicked.connect(self.loadImageFaceBlurring)
         self.btn_blur_face.show()
+        self.btn_home_face.show()
         self.scale_slider.show()
         self.scale_label.show()
+        
+    
+    def loadImageFaceBlurring(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+
+        file_name, _ = QFileDialog.getOpenFileName(self, 'Pilih Gambar', '', 'Images (*.png *.xpm *.jpg *.bmp *.jpeg *.tiff);;All Files (*)', options=options)
+
+        if file_name:
+            self.image_original = cv2.imread(file_name)
+            if self.image_original is not None:
+                # Tambahkan logika khusus face blurring di sini jika diperlukan
+                self.btn_blur_face.show()
+                self.scale_slider.show()
+                self.scale_label.show()
+                image_resized = self.resizeImageToFitLabel(self.image_original, self.face_image_container)
+                self.displayImageFaceBlurring(image_resized)
+
 
     def loadImage(self):
         options = QFileDialog.Options()
@@ -160,7 +193,7 @@ class HistogramEqualizationApp(QMainWindow):
         if file_name:
             self.image_original = cv2.imread(file_name)
             if self.image_original is not None:
-                self.btn_convert.show()  
+                self.btn_convert.show()
                 self.btn_home.show()
                 image_resized = self.resizeImageToFitLabel(self.image_original, self.image_container)
                 self.displayImage(image_resized)
