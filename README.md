@@ -22,6 +22,9 @@
 
 # Face Blurring
 
+<img width="960" alt="blur" src="https://github.com/birrulwalidain09/Image-Processing-App-Klp11/assets/84619047/f9b519e9-84f6-49f2-b99e-1b66e40e4890">
+
+
 
 
 
