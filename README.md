@@ -10,6 +10,7 @@
 * PyQt
 * OpenCV
 * Matplotlib
+* Python Imaging Library (PIL)
 
 # Histogram Equalization
 
