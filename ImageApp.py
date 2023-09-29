@@ -6,21 +6,27 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPu
 from PyQt5.QtGui import QPixmap, QImage, QIcon
 from PyQt5.QtCore import Qt
 from PIL import Image, ImageQt
+from PyQt5.QtWidgets import QPushButton
 
+ 
 class HistogramEqualizationApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.initUI()
         self.createHomePage()  # Membuat halaman awal
+        self.createSegmentationPage()
+        
+        self.segmentation_image = None
 
     def initUI(self):
         self.setWindowTitle('Aplikasi Pengolahan Citra_Kelompok 11')
         self.setGeometry(100, 100, 800, 600)
+        self.setFixedSize(800, 600)
 
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
-
+ 
         self.layout = QVBoxLayout()
         self.central_widget.setLayout(self.layout)
 
@@ -35,6 +41,7 @@ class HistogramEqualizationApp(QMainWindow):
 
         self.face_blurring_page = QWidget(self)
         self.stacked_widget.addWidget(self.face_blurring_page)
+         
 
         self.home_layout = QVBoxLayout()
         self.home_page.setLayout(self.home_layout)
@@ -63,7 +70,6 @@ class HistogramEqualizationApp(QMainWindow):
         self.btn_upload = QPushButton('Upload Gambar', self)
         self.image_layout.addWidget(self.btn_upload)
         self.btn_upload.clicked.connect(self.loadImage)
-        self.btn_upload.setFixedWidth(self.btn_upload.fontMetrics().boundingRect(self.btn_upload.text()).width() + 20)
 
         self.image_container = QLabel(self)
         self.image_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -77,15 +83,20 @@ class HistogramEqualizationApp(QMainWindow):
         self.btn_convert.setFixedWidth(self.btn_convert.fontMetrics().boundingRect(self.btn_convert.text()).width() + 20)
         self.btn_convert.hide()
         
-        self.btn_upload_face = QPushButton('Upload Gambar', self)  # Create the Upload Gambar button
-        self.face_blurring_layout.addWidget(self.btn_upload_face)  # Add it to the layout
-        self.btn_upload_face.clicked.connect(self.loadImage)  # Connect its click event to loadImage
+        self.btn_upload_face = QPushButton('Upload Gambar', self)   
+        self.face_blurring_layout.addWidget(self.btn_upload_face)
+        self.btn_upload_face.clicked.connect(self.loadImageFaceBlurring)
         
         self.btn_blur_face = QPushButton('Blurring', self)
         self.face_blurring_layout.addWidget(self.btn_blur_face)
         self.btn_blur_face.clicked.connect(self.performFaceBlurring)  # Connect the button to performFaceBlurring
         self.btn_blur_face.hide()
         
+        self.btn_segmentation = QPushButton('Segmentation', self)  # Tambahkan tombol Segmentation
+        self.home_layout.addWidget(self.btn_segmentation)
+        self.btn_segmentation.clicked.connect(self.showSegmentationPage)
+        self.btn_segmentation.setFixedWidth(self.btn_segmentation.fontMetrics().boundingRect(self.btn_segmentation.text()).width() + 20)
+
         self.btn_home_face = QPushButton('Home', self)
         self.face_blurring_layout.addWidget(self.btn_home_face)
         self.btn_home_face.clicked.connect(self.goToHomePage)
@@ -128,6 +139,7 @@ class HistogramEqualizationApp(QMainWindow):
         
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
+        
     def createHomePage(self):
         self.home_page = QWidget(self)
         self.stacked_widget.addWidget(self.home_page)
@@ -149,6 +161,11 @@ class HistogramEqualizationApp(QMainWindow):
         self.home_layout.addWidget(self.btn_face_blurring)
         self.btn_face_blurring.clicked.connect(self.showFaceBlurringPage)
         self.btn_face_blurring.setFixedWidth(self.btn_face_blurring.fontMetrics().boundingRect(self.btn_face_blurring.text()).width() + 20)
+        
+        self.btn_segmentation = QPushButton('Segmentation', self)
+        self.home_layout.addWidget(self.btn_segmentation)
+        self.btn_segmentation.clicked.connect(self.showSegmentationPage)
+        self.btn_segmentation.setFixedWidth(self.btn_segmentation.fontMetrics().boundingRect(self.btn_segmentation.text()).width() + 20)
 
     def goToHomePage(self):
         self.stacked_widget.setCurrentWidget(self.home_page)
@@ -157,16 +174,8 @@ class HistogramEqualizationApp(QMainWindow):
         self.scale_slider.hide()
         self.scale_label.hide()
         self.btn_home_face.hide()
-        
-    def showFaceBlurringPage(self):
-        self.stacked_widget.setCurrentWidget(self.face_blurring_page)
-        self.btn_upload_face.clicked.connect(self.loadImageFaceBlurring)
-        self.btn_blur_face.show()
-        self.btn_home_face.show()
-        self.scale_slider.show()
-        self.scale_label.show()
-        
-    
+
+          
     def loadImageFaceBlurring(self):
         options = QFileDialog.Options()
         options |= QFileDialog.ReadOnly
@@ -176,7 +185,6 @@ class HistogramEqualizationApp(QMainWindow):
         if file_name:
             self.image_original = cv2.imread(file_name)
             if self.image_original is not None:
-                # Tambahkan logika khusus face blurring di sini jika diperlukan
                 self.btn_blur_face.show()
                 self.scale_slider.show()
                 self.scale_label.show()
@@ -197,6 +205,7 @@ class HistogramEqualizationApp(QMainWindow):
                 self.btn_home.show()
                 image_resized = self.resizeImageToFitLabel(self.image_original, self.image_container)
                 self.displayImage(image_resized)
+
 
     def updateBlurScale(self):
         scale = self.scale_slider.value()
@@ -336,8 +345,11 @@ class HistogramEqualizationApp(QMainWindow):
     def showImagePage(self):
         self.stacked_widget.setCurrentWidget(self.image_page)
         self.btn_upload.show()
-        self.btn_convert.show()
+        self.btn_convert.setText('Konversi')
+        self.btn_convert.clicked.disconnect()
+        self.btn_convert.clicked.connect(self.performHistogramEqualization)
         self.btn_home.show()
+
 
     def showEdgeDetectionPage(self):
         self.stacked_widget.setCurrentWidget(self.image_page)
@@ -355,13 +367,39 @@ class HistogramEqualizationApp(QMainWindow):
 
         # Mengganti nama button di bawah kotak gambar yang diupload
         self.btn_upload.setText('Upload Gambar')
-        self.btn_convert.setText('Konversi Edge')
+        self.btn_convert.setText('Konversi')
+    
+    def showFaceBlurringPage(self):
+        self.stacked_widget.setCurrentWidget(self.face_blurring_page)
+        self.btn_upload_face.clicked.connect(self.loadImageFaceBlurring)
+        self.btn_blur_face.show()
+        self.btn_home_face.show()
+        self.scale_slider.show()
+        self.scale_label.show()
         
+    def showSegmentationPage(self):
+        self.stacked_widget.setCurrentWidget(self.segmentation_page)  # Menggunakan halaman yang telah dibuat sebelumnya
+        self.btn_upload_segmentation.show()
+        self.btn_segment.show()
+        self.btn_home_segmentation.show()
+        self.segmentation_image_container.clear()
+
+        self.btn_upload_segmentation.setText('Upload Gambar')
+        self.btn_upload_segmentation.clicked.disconnect()
+        self.btn_upload_segmentation.clicked.connect(self.loadImageSegmentation)
+
+        self.btn_segment.setText('Segmentasi')
+        self.btn_segment.clicked.disconnect()
+        self.btn_segment.clicked.connect(self.performSegmentation)
+
+
+
     def resizeImageToFitLabel(self, image, label):
         label_size = label.size()
-        image_height, image_width, _ = image.shape
         label_width = label_size.width()
         label_height = label_size.height()
+
+        image_height, image_width, _ = image.shape  # Menggunakan tiga nilai yang dikembalikan oleh image.shape
 
         if label_width / label_height > image_width / image_height:
             scaled_width = label_width
@@ -372,11 +410,114 @@ class HistogramEqualizationApp(QMainWindow):
 
         return cv2.resize(image, (scaled_width, scaled_height))
 
+    
+    def createSegmentationPage(self):
+        self.segmentation_page = QWidget(self)
+        self.stacked_widget.addWidget(self.segmentation_page)
+
+        self.segmentation_layout = QVBoxLayout()
+        self.segmentation_page.setLayout(self.segmentation_layout)
+
+        self.btn_upload_segmentation = QPushButton('Upload Gambar', self.segmentation_page)  # Mengakses objek btn_upload_segmentation melalui objek segmentation_page
+        self.segmentation_layout.addWidget(self.btn_upload_segmentation)
+        self.btn_upload_segmentation.clicked.connect(self.loadImageSegmentation)
+
+        self.segmentation_image_container = QLabel(self.segmentation_page)  # Mengakses objek segmentation_image_container melalui objek segmentation_page
+        self.segmentation_image_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.segmentation_image_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.segmentation_image_container.setStyleSheet("background-color: white; border: 1px solid black;")
+        self.segmentation_layout.addWidget(self.segmentation_image_container)
+
+        self.btn_segment = QPushButton('Segmentasi', self.segmentation_page)
+        self.segmentation_layout.addWidget(self.btn_segment)
+        self.btn_segment.clicked.connect(self.performSegmentation)
+        self.btn_segment.setFixedWidth(self.btn_segment.fontMetrics().boundingRect(self.btn_segment.text()).width() + 20)
+        self.btn_segment.hide()
+
+        self.btn_home_segmentation = QPushButton('Home', self.segmentation_page)
+        self.segmentation_layout.addWidget(self.btn_home_segmentation)
+        self.btn_home_segmentation.clicked.connect(self.goToHomePage)
+        self.btn_home_segmentation.setFixedWidth(self.btn_home_segmentation.fontMetrics().boundingRect(self.btn_home_segmentation.text()).width() + 20)
+        self.btn_home_segmentation.hide()
+
+
+    def goToSegmentationPage(self):
+        self.stacked_widget.setCurrentWidget(self.segmentation_page)
+        self.segmentation_page.btn_upload_segmentation.show()  # Mengakses btn_upload_segmentation melalui objek segmentation_page
+        self.segmentation_page.btn_segment.show()
+        self.segmentation_page.btn_home_segmentation.show()
+        self.segmentation_page.segmentation_image_container.clear()
+
+
+    def loadImageSegmentation(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+
+        file_name, _ = QFileDialog.getOpenFileName(self, 'Pilih Gambar', '', 'Images (*.png *.xpm *.jpg *.bmp *.jpeg *.tiff);;All Files (*)', options=options)
+
+        if file_name:
+            self.segmentation_image = cv2.imread(file_name)
+            if self.segmentation_image is None:
+                QMessageBox.warning(self, 'Peringatan', 'Gagal membaca gambar. Pastikan file gambar valid.')
+            else:
+                self.btn_segment.show()
+                image_resized = self.resizeImageToFitLabel(self.segmentation_image, self.segmentation_image_container)
+                image_rgb = cv2.cvtColor(image_resized, cv2.COLOR_BGR2RGB)  # Konversi ke format warna RGB
+                self.displaySegmentationImage(image_rgb)
+
+    def displaySegmentationImage(self, image):
+        height, width, _ = image.shape
+        bytes_per_line = 3 * width
+        q_image = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
+        pixmap = QPixmap.fromImage(q_image)
+        self.segmentation_image_container.setPixmap(pixmap)
+        self.segmentation_image_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+
+    def performSegmentation(self):
+        if self.segmentation_image is not None:
+            # Konversi citra ke format warna HSV (Hue, Saturation, Value)
+            hsv_image = cv2.cvtColor(self.segmentation_image, cv2.COLOR_BGR2HSV)
+
+            # Tentukan rentang warna untuk buah matang (merah)
+            lower_red = np.array([0, 100, 100])
+            upper_red = np.array([10, 255, 255])
+            mask_red1 = cv2.inRange(hsv_image, lower_red, upper_red)
+
+            lower_red = np.array([160, 100, 100])
+            upper_red = np.array([180, 255, 255])
+            mask_red2 = cv2.inRange(hsv_image, lower_red, upper_red)
+
+            # Gabungkan hasil segmentasi
+            segmentation_result = cv2.bitwise_or(mask_red1, mask_red2)
+
+            # Temukan kontur objek yang tersegmentasi
+            contours, _ = cv2.findContours(segmentation_result, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            # Loop melalui kontur dan tandai buah kopi yang matang dengan kotak dan label "matang"
+            segmented_image = self.segmentation_image.copy()
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                if w > 10 and h > 10:  # Batasi ukuran objek yang akan ditandai
+                    cv2.rectangle(segmented_image, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Tandai dengan kotak hijau
+                    cv2.putText(segmented_image, 'Matang', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+            # Tampilkan gambar original dan hasil segmentasi dalam satu gambar
+            combined_image = np.hstack([self.segmentation_image, segmented_image])
+
+            # Tampilkan gambar yang menggabungkan gambar original dan hasil segmentasi
+            self.displaySegmentationImage(combined_image)
+
+
+
 def main():
     app = QApplication(sys.argv)
     ex = HistogramEqualizationApp()
-    ex.show()
+    ex.showFullScreen()  # Menampilkan aplikasi dalam mode fullscreen
     sys.exit(app.exec_())
+    
 
 if __name__ == '__main__':
     main()
+ 
