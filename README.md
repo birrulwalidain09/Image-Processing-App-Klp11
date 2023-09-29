@@ -1,5 +1,7 @@
 # Image-Processing-Image-App-Klp11
 
+Project MataKuliah Pengolahan Citra
+
 # Anggota Kelompok
 
 * Birrul Walidain
@@ -23,6 +25,11 @@
 # Face Blurring
 
 <img width="960" alt="blur" src="https://github.com/birrulwalidain09/Image-Processing-App-Klp11/assets/84619047/f9b519e9-84f6-49f2-b99e-1b66e40e4890">
+
+# Segmentation
+
+<img width="960" alt="segmentasi" src="https://github.com/birrulwalidain09/Image-Processing-App-Klp11/assets/84619047/07b4b5ce-dbf2-4b00-b900-8447859963a4">
+
 
 
 
