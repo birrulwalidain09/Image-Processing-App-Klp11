@@ -13,6 +13,7 @@ Project MataKuliah Pengolahan Citra
 * OpenCV
 * Matplotlib
 * Python Imaging Library (PIL)
+* scikit-image
 
 # Histogram Equalization
 
